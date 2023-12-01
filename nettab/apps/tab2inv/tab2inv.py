@@ -37,6 +37,9 @@ def main():
 	parser.add_option("-o", "--output", type="string",
 					help="Indicates the output file", dest="outFile", default="-")
 
+	parser.add_option("-r", "--relaxcoords", action="store_true",
+					  help="Relax the exigence that a station has a single location.", dest="relax_coords", default=False)
+
 	# Parsing & Error check
 	(options, args) = parser.parse_args()
 	error = False
@@ -55,7 +58,7 @@ def main():
 		t=Tab(options.instrumentPrefix, options.defaultFile, options.ffolder, options.xfolder, options.database)
 		for f in args:
 			try:
-				t.digest(f)
+				t.digest(f, options.relax_coords)
 			except Exception as e:
 				print("Error digesting %s:\n %s" % (f, e), file=sys.stderr)
 				if not options.force:

@@ -118,7 +118,7 @@ class Network(nslc, sc3):
 	def __str__(self):
 		return "%s" % (self.code)
 
-	def __init__(self, nw):
+	def __init__(self, nw, relax_coords = False):
 		if not isinstance(nw,Nw):
 			return False
 
@@ -130,6 +130,7 @@ class Network(nslc, sc3):
 		self.start = nw.start
 		self.end = nw.end
 		self.att = nw.getNetworkAttributes()
+		self.__relax_coords = relax_coords
 
 	def __match__(self, sl):
 		if not isinstance(sl,Sl):
@@ -175,7 +176,7 @@ class Network(nslc, sc3):
 			except DontFit:
 				pass
 		if not inserted:
-			st = Station(self, sl)
+			st = Station(self, sl, self.__relax_coords)
 			if debug: print("[%s] created new station %s %s" % (self, st, st._span()), file=sys.stderr)
 			for sta in self.stations:
 				if sta.conflict(st):
@@ -199,7 +200,7 @@ class Station(nslc, sc3):
 	def __str__(self):
 		return "%s.%s" % (self.network.code, self.code)
 
-	def __init__(self, network, sl):
+	def __init__(self, network, sl, relax_coords = False):
 		if not isinstance(sl,Sl):
 			return False
 
@@ -214,9 +215,12 @@ class Station(nslc, sc3):
 		self.end = sl.end
 		self.att = sl.getStationAttributes()
 
+		# I cannot have locations with different coordinates
+		self.__relax_coords = relax_coords
+
 		# Further parse to generate my locations
 		self.Sl(sl)
-	
+
 	def __match__(self, obj):
 		if not isinstance(obj,Sl):
 			return False
@@ -229,6 +233,9 @@ class Station(nslc, sc3):
 			# Make sure that all attributes in Sl-line are here
 			if at not in self.att:
 				return False
+			# Latitude and Longitude can differ -> results in different locations!
+			if self.__relax_coords and (at in [ "Latitude", "Longitude" ]):
+				continue
 			# And they match
 			if att[at] != self.att[at]:
 				return False
@@ -238,7 +245,7 @@ class Station(nslc, sc3):
 				return False
 
 		return True
-	
+
 	def __adjustTime__(self, sl):
 		if sl.start < self.start:
 			self.start = sl.start

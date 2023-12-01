@@ -135,7 +135,7 @@ class Tab(object):
 				self.stationResolver.collectStations(inventory)
 		print("Done.", file=sys.stderr)
 
-	def digest(self, tabFilename):
+	def digest(self, tabFilename, relax_coords = False):
 		sas = []
 		ias = []
 		nw = None
@@ -219,7 +219,7 @@ class Tab(object):
 						if not nw:
 							raise Exception("No network defined, Hr line should come before station line.")
 						else:
-							n = Network(nw)
+							n = Network(nw, relax_coords)
 							for (filename, network) in self.n.items():
 								if network.conflict(n):
 									raise Exception("Network already defined %s (%s)-(%s) by file %s." % (network.code, network.start, network.end, filename))
@@ -322,7 +322,7 @@ class Tab(object):
 		finally:
 			if fd:
 				fd.close()
-	
+
 	def check(self):
 		# Instrument alone check
 		if self.i.keys:
@@ -343,7 +343,7 @@ class Tab(object):
 				for e in error: print(e, file=sys.stderr)
 		else:
 			print("\nNo network/stations loaded.", file=sys.stderr)
-	
+
 	def sc3Obj(self, sc3i = None):
 		if not sc3i:
 			sc3i = seiscomp.datamodel.Inventory()
